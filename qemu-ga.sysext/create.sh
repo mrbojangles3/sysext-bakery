@@ -16,23 +16,8 @@
 #  for `multi-user.target` in the "files/..." directory of this extension.
 RELOAD_SERVICES_ON_MERGE="true"
 
-# If your extension publishes custom versions other than
-# "<extension>-v1.2.3" or "<extension>-1.2.3" please provide a regex match
-# pattern. Will be used by "bakery.sh list-bakery <extension>" and
-# by the release scripts.
-# EXTENSION_VERSION_MATCH_PATTERN='[.v0-9]+'
 
-# If you need to run curl calls to api.github.com consider using
-# 'curl_api_wrapper' (from lib/helpers.sh). The wrapper will use GH_TOKEN
-# if set to prevent throttling of unauthenticated calls, and handle pagination
-# etc.
-
-# Fetch and print a list of available versions.
-# Called by 'bakery.sh list <sysext>.
 function list_available_versions() {
-  # TODO: implement fetching a list of releases from upstream
-  #       and print available versions, one version per line.
-  #  e.g. using list_github_releases from lib/helpers.sh.      
   list_gitlab_tags "gitlab.com" "11167699" 
 }
 # --
@@ -66,21 +51,35 @@ function populate_sysext_root() {
   # On Flatcar, /usr/sbin is a symlink to /usr/bin; shipping it in a sysext
   # would overwrite /usr/sbin at merge and make its contents disappear.
 }
-# --
+function populate_sysext_root() {
+  local sysextroot="$1"
+  local arch="$2"
+  local version="$3"
 
-# This is rarely used and can be removed if not needed.
-# Allows to pass sysext specific optional parameters to populate_sysext_root.
-# The parameters can be parsed from "${@}" passed to populate_sysext_root,
-#  using get_optional_param from lib/helpers.sh.
-# Optional parameters MUST have a value, e.g.
-#   --foo bar
-# they must NEVER be flags, i.e.
-#   --foo.
-# Use
-#   local val="$(get_optional_param "foo" "$@")"
-# to retrieve the value (or an empty string when not set).
-function populate_sysext_root_options() {
-  echo "  --foo <bar|baz>  : Build foo as bar or baz."
+  local img_arch
+  img_arch="$(arch_transform 'x86-64' 'amd64' "$arch")"
+  img_arch="$(arch_transform 'arm64' 'arm64/v8' "$img_arch")"
+
+  local image="docker.io/alpine:3.21"
+
+  announce "Building haproxy $version for $arch"
+
+  local user_group="$(id -u):$(id -g)"
+
+  cp "${scriptroot}/haproxy.sysext/build.sh" .
+  docker run --rm \
+    -i \
+    -v "$(pwd)":/install_root \
+    --platform "linux/${img_arch}" \
+    --pull always \
+    --network host \
+    "${image}" \
+        /install_root/build.sh "${version}" "$user_group"
+
+  # build.sh installs to /install_root/usr; merge that on top of the
+  # static files already staged in ${sysextroot}/usr. Use the /. trick
+  # so cp merges into an existing directory instead of nesting.
+  mkdir -p "${sysextroot}/usr"
+  cp -a usr/. "${sysextroot}/usr/"
 }
-# --
 
