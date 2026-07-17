@@ -9,12 +9,13 @@ set -euo pipefail
 version="$1"
 export_user_group="$2"
 
+apk update
 apk --no-cache add \
 	build-base \
 	curl \
 	python3 \
 	pcre2-static \
-	ninja \
+	meson \
 	glib-static \
 
 
