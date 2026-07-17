@@ -33,7 +33,7 @@ function list_available_versions() {
   # TODO: implement fetching a list of releases from upstream
   #       and print available versions, one version per line.
   #  e.g. using list_github_releases from lib/helpers.sh.      
-  true
+  list_gitlab_tags "gitlab.com" "11167699" 
 }
 # --
 
