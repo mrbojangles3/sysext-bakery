@@ -21,10 +21,10 @@ apk --no-cache add \
 
 
 # Qemu doesn't seem to always have verified tags and pipeline passes. Select version with care
-curl -fsSLO "https://gitlab.com/qemu-project/qemu/-/archive/v${version}/qemu-v${version}.tar.bz2?ref_type=tags"
-
-tar -xf "qemu-v${version}"
-cd "qemu-v${version}"
+curl -fsSLO "https://gitlab.com/qemu-project/qemu/-/archive/${version}/qemu-${version}.tar.bz2?ref_type=tags"
+ls qemu-*
+tar -xf "qemu-${version}-tar.bz2"
+cd "qemu-${version}"
 mkdir build
 pushd build
 ../configure --enable-guest-agent \
