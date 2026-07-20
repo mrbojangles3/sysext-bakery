@@ -42,9 +42,8 @@ cd build
 # This does the build
 ninja qemu-ga
 
-mv qga/qemu-ga /install_root
-cd /install_root
+mv qga/qemu-ga /install_root/
 
 # TODO  - check on install_root, PREFIX=/usr, SBINDIR=/usr/bin? 
-chown -R "${export_user_group}" qemu-ga
+chown -R "${export_user_group}" /install_root/
 
