@@ -31,7 +31,7 @@ RELOAD_SERVICES_ON_MERGE="true"
 # Called by 'bakery.sh list <sysext>.
 function list_available_versions() {
   curl_api_wrapper https://api.github.com/repos/sysstat/sysstat/tags \
-    | jq -r 'map_values(select(.prerelease == false)) | .[].tag_name' \
+    | jq -r '.[].name' \
     | sort -Vr
 
 }
