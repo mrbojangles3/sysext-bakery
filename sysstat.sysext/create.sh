@@ -33,7 +33,6 @@ function list_available_versions() {
   curl_api_wrapper https://api.github.com/repos/sysstat/sysstat/tags \
     | jq -r '.[].name' \
     | sort -Vr
-
 }
 # --
 
@@ -53,12 +52,14 @@ function populate_sysext_root() {
   local arch="$2"
   local version="$3"
   local name="sysstat"
+  set -x
 
   # TODO: add code to populate ${sysextroot} here.
   # e.g.
   local rel_arch="$(arch_transform "x86-64" "amd64" "$arch")"
-  curl -o "sysstat.${rel_arch}.${version}.tar.gz"\
-          -fsSl "https://github.com/${name}/${name}/archive/refs/tags/{$version}.tar.gz"
+  
+  # TODO copy the structure for HAPROXY, get a working build script then mount it into the alpine container.
+  curl -o  "sysstat.${rel_arch}.${version}.tar.gz" -fsSL "https://github.com/${name}/${name}/archive/refs/tags/${version}.tar.gz"
   tar --force-local -xf "sysstat.${rel_arch}.${version}.tar.gz"
 
   # curl --parallel --fail --silent --show-error --location \
@@ -66,19 +67,24 @@ function populate_sysext_root() {
   # tar --force-local -xf "..." -C "${sysextroot}/usr"
   #   and / or
   # cp -a ...
+  cp "${scriptroot}/sysstat.sysext/build.sh" .
   docker run --rm \
               -i \
-              -v "sysstat.${rel_arch}.${version}":/"sysstat.${rel_arch}.${version}"
+              -v "$(pwd)":/install_root \
               -v "${scriptroot}/tools/":/tools \
-              -v "${sysextroot}":/install_root \
-              -w /"sysstat.${rel_arch}.${version}"\
-              --platform "linux/${img_arch}" \
+              --platform "linux/${arch}" \
               --pull always \
               --network host \
-              -c "apk add --no-cach build-base autoconf automake libtool && ./configure LDFLAGS='-static' && make -j$(nproc)"
               docker.io/alpine:latest \
+                /install_root/build.sh "${version}"
 
 
+
+ # build.sh installs to /install_root/usr; merge that on top of the
+ # static files already staged in ${sysextroot}/usr. Use the /. trick
+ # so cp merges into an existing directory instead of nesting.
+ mkdir -p "${sysextroot}/usr"
+ cp -a usr/. "${sysextroot}/usr/"
 
   # WARNING: NEVER ship /usr/sbin in a sysext.
   # On Flatcar, /usr/sbin is a symlink to /usr/bin; shipping it in a sysext
