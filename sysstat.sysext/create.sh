@@ -71,7 +71,6 @@ function populate_sysext_root() {
   docker run --rm \
               -i \
               -v "$(pwd)":/install_root \
-              -v "${scriptroot}/tools/":/tools \
               --platform "linux/${arch}" \
               --pull always \
               --network host \
@@ -84,7 +83,8 @@ function populate_sysext_root() {
  # static files already staged in ${sysextroot}/usr. Use the /. trick
  # so cp merges into an existing directory instead of nesting.
  mkdir -p "${sysextroot}/usr"
- cp -a usr/. "${sysextroot}/usr/"
+ ls -la
+ cp -a bins/. "${sysextroot}/usr/"
 
   # WARNING: NEVER ship /usr/sbin in a sysext.
   # On Flatcar, /usr/sbin is a symlink to /usr/bin; shipping it in a sysext

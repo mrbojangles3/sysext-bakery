@@ -7,8 +7,6 @@
 #
 set -euo pipefail
 
-set -x
-
 version="$1"
 
 name=sysstat
@@ -28,21 +26,23 @@ cd "${src}"
 curl -fsSLO "https://github.com/${name}/${name}/archive/refs/tags/${version}.tar.gz"
 
 tar -xf "${version}.tar.gz"
-cd "sysstat-${version#v}" # TODO without the "v" for reasons
+cd "sysstat-${version#v}"
 
-# TODO figure out the systemd files etc. 
-
+# TODO put the systemd files into /install_root/files
+# This should be the local dir
+# TODO make the build script output the bins to /install_root/bins
+#      check the permissions on the files 
+#      
+#
 ./configure CFLAGS='-static -s' LDFLAGS='-static -lc -ldl'
 
 make
 
-# TODO make a list of all the executables to move to their final spot
-#make install-bin DESTDIR=/install_root PREFIX=/usr SBINDIR=/usr/bin
+# TODO run make install to the right location
 
-#rm -rf /install_root/usr/share /install_root/usr/doc /install_root/etc
-
+mkdir -p /install_root/bins/
 for file in ${bins}; do
-	cp "$file" /install_root/
+	cp "$file" /install_root/bins/
 done
 
 exit 0
